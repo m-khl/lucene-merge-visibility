@@ -101,7 +101,7 @@ public class TestNumDValUpdVsReaderVisibility extends LuceneTestCase {
       reader = hardReopenBeforeDVUpdate  ? readerReopenHard(reader, writer, dir) 
           : readerReopenIfChanged(reader, writer, dir);
       
-      int segmantsBeforeDVCommit = reader.leaves().size();
+      int segmentsBeforeDVCommit = reader.leaves().size();
       
       IndexSearcher indexSearcher = new IndexSearcher(reader);
       // find recently added doc, and update it with its' docNum
@@ -117,9 +117,9 @@ public class TestNumDValUpdVsReaderVisibility extends LuceneTestCase {
       
       int segmentsAfterDVCommit = reader.leaves().size();
       
-      if(segmantsBeforeDVCommit!=segmentsAfterDVCommit){
+      if(segmentsBeforeDVCommit!=segmentsAfterDVCommit){
         System.err.println("dv upd commit exposed merged solid segment");
-        assertEquals(1, segmentsAfterDVCommit);
+        assertEquals("I suppose I've got solid index with single segment after merged", 1, segmentsAfterDVCommit);
         /// it fails at assertEquals(checkingDoc, dvAct); below anyway
       }
       
@@ -131,7 +131,7 @@ public class TestNumDValUpdVsReaderVisibility extends LuceneTestCase {
       LeafReaderContext segment = reader.leaves().get(
           ReaderUtil.subIndex(checkingDoc, reader.leaves()));
       long dvAct = segment.reader().getNumericDocValues("val").get(checkingDoc-segment.docBase);
-      assertEquals(checkingDoc, dvAct);
+      assertEquals("failed on "+pk, checkingDoc, dvAct);
       
       if(pkDocNum==0){ // need to have a hole to detect the merge
         writer.deleteDocuments(pk);
