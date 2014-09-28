@@ -41,8 +41,6 @@ public class TestNumDValUpdVsReaderVisibility extends LuceneTestCase {
   private static Directory dir;
   private static IndexWriter writer;
   
-  private static  boolean hardReopenBeforeDVUpdate = false;//true/* PASS */ /*false FAIL*/;
-  
   private static int docPairsToTest=1000;
 
   private Document doc(int id) {
@@ -96,11 +94,12 @@ public class TestNumDValUpdVsReaderVisibility extends LuceneTestCase {
         }
         writer.addDocument(doc(addDoc++)); 
       }
-      writer.commit();
+      //writer.commit();
       
-      reader = hardReopenBeforeDVUpdate  ? readerReopenHard(reader, writer, dir) 
-          : readerReopenIfChanged(reader, writer, dir);
-      
+      reader = readerReopenIfChanged(reader, writer);
+      // second reopen reveals the merge occurs during the previous reopen.
+      reader = readerReopenIfChanged(reader, writer);
+          
       int segmentsBeforeDVCommit = reader.leaves().size();
       
       IndexSearcher indexSearcher = new IndexSearcher(reader);
@@ -111,9 +110,9 @@ public class TestNumDValUpdVsReaderVisibility extends LuceneTestCase {
           writer.updateNumericDocValue(pk, "val", forUpdate.scoreDocs[0].doc);
         }
         //apply docval upd 
-      writer.commit();
+      //writer.commit();
       // look on it again
-      reader = readerReopenIfChanged(reader, writer, dir);
+      reader = readerReopenIfChanged(reader, writer);
       
       int segmentsAfterDVCommit = reader.leaves().size();
       
@@ -140,30 +139,19 @@ public class TestNumDValUpdVsReaderVisibility extends LuceneTestCase {
       reader.close();
   }
 
-  private DirectoryReader readerReopenIfChanged(DirectoryReader oldReader, IndexWriter writer2,
-      Directory dir2) throws IOException {
+  private DirectoryReader readerReopenIfChanged(DirectoryReader oldReader, IndexWriter writer2) throws IOException {
     if(oldReader==null){
-      return DirectoryReader.open(dir);
+      return DirectoryReader.open(writer2, true);
     }else{
       DirectoryReader reopenReader = DirectoryReader.openIfChanged(oldReader);
-      assertNotNull(reopenReader);
-      assertNotSame(reopenReader, oldReader);
-      oldReader.close();
-      return reopenReader; 
-    }
-  }
-  
-  private DirectoryReader readerReopenHard(DirectoryReader oldReader, IndexWriter writer2,
-      Directory dir2) throws IOException {
-    if(oldReader==null){
-      return DirectoryReader.open(dir);
-    }else{
-      // let it flush merged segment
-      writer2.close();
-      writer = new IndexWriter(dir, makeConf());
-      oldReader.close();
-      DirectoryReader reopenReader = DirectoryReader.open(dir);
-      return reopenReader; 
+      if(reopenReader!=null){
+        assertNotNull(reopenReader);
+        assertNotSame(reopenReader, oldReader);
+        oldReader.close();
+        return reopenReader; 
+      }else{
+        return oldReader;
+      }
     }
   }
 }
