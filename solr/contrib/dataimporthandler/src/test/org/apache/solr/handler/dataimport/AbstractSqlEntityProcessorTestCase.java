@@ -47,6 +47,7 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
   protected boolean countryCached;
   protected boolean sportsEntity;
   protected boolean sportsCached;
+  protected boolean sportsZipper;
   protected String rootTransformerName;
   protected boolean countryTransformer;
   protected boolean sportsTransformer;    
@@ -67,6 +68,7 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
     countryCached = false;
     sportsEntity = false;
     sportsCached = false;
+    sportsZipper = false;
     rootTransformerName = null;
     countryTransformer = false;
     sportsTransformer = false;
@@ -241,7 +243,7 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
         xpath[0] = "//*[@numFound='1']";
         int i = 1;
         for (String ms : michaelsSports) {
-          xpath[i] = "//doc/arr[@name='SPORT_NAME_mult_s']/str[" + i + "]='"
+          xpath[i] = "//doc/arr[@name='SPORT_NAME_mult_s']/str='"//[" + i + "]='" don't care about particular order
               + ms + "'";
           i++;
         }
@@ -574,7 +576,10 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
     sb.append("dataSource=''" + ds + "'' ");
     sb.append(rootTransformerName != null ? "transformer=''"
         + rootTransformerName + "'' " : "");
-    sb.append("query=''SELECT ID, NAME, COUNTRY_CODE FROM PEOPLE WHERE DELETED != 'Y' '' ");
+  
+    sb.append("query=''SELECT ID, NAME, COUNTRY_CODE FROM PEOPLE WHERE DELETED != 'Y' "
+                    +(sportsZipper?"ORDER BY ID":"")+"'' ");
+
     sb.append(deltaQueriesPersonTable());
     sb.append("> \n");
     
@@ -623,7 +628,12 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
         } else {
           sb.append(random().nextBoolean() ? "cacheKey=''PERSON_ID'' cacheLookup=''People.ID'' "
               : "where=''PERSON_ID=People.ID'' ");
-          sb.append("query=''SELECT ID, PERSON_ID, SPORT_NAME FROM PEOPLE_SPORTS ORDER BY ID'' ");
+          if(sportsZipper){
+              sb.append("join=''zipper'' query=''SELECT ID, PERSON_ID, SPORT_NAME FROM PEOPLE_SPORTS ORDER BY PERSON_ID'' ");
+            }
+          else{
+            sb.append("query=''SELECT ID, PERSON_ID, SPORT_NAME FROM PEOPLE_SPORTS ORDER BY ID'' ");
+          }
         }
       } else {
         sb.append("processor=''SqlEntityProcessor'' query=''SELECT ID, SPORT_NAME FROM PEOPLE_SPORTS WHERE DELETED != 'Y' AND PERSON_ID=${People.ID} ORDER BY ID'' ");

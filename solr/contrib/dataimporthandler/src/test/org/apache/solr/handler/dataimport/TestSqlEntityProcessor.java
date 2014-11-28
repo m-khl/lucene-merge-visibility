@@ -45,6 +45,13 @@ public class TestSqlEntityProcessor extends AbstractSqlEntityProcessorTestCase {
   public void testCachedChildEntities() throws Exception {
     withChildEntities(true, true);
   }
+  
+  @Test
+  public void testZipperChildEntities() throws Exception {
+    sportsZipper = true;
+    withChildEntities(true, true);
+  }
+  
   @Test
   @Ignore("broken see SOLR-3857")
   public void testSimpleCacheChildEntities() throws Exception {
