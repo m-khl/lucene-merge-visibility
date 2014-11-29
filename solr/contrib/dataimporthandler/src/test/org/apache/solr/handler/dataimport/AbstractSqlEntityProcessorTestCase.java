@@ -231,10 +231,14 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
       {
         String[] countryCodes = getStringsFromQuery("SELECT CODE FROM COUNTRIES WHERE DELETED != 'Y'");
         String theCode = countryCodes[random().nextInt(countryCodes.length)];
-        String nrName = countryNameByCode(theCode);
         int num = numberPeopleByCountryCode(theCode);
-        assertQ(req("COUNTRY_CODES_mult_s:"+theCode), "//*[@numFound='" + num + "']",
+        if(num>0){
+          String nrName = countryNameByCode(theCode);
+          assertQ(req("COUNTRY_CODES_mult_s:"+theCode), "//*[@numFound='" + num + "']",
               "//doc/str[@name='COUNTRY_NAME_s']='" + nrName + "'");
+        }else{ // no one lives there anyway
+          assertQ(req("COUNTRY_CODES_mult_s:"+theCode), "//*[@numFound='" + num + "']");
+        }
       }
       if (countryTransformer && !underlyingDataModified) {
         assertQ(req("countryAdded_s:country_added"), "//*[@numFound='"
