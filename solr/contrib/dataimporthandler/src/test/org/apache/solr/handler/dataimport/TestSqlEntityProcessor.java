@@ -47,7 +47,20 @@ public class TestSqlEntityProcessor extends AbstractSqlEntityProcessorTestCase {
   }
   
   @Test
-  public void testZipperChildEntities() throws Exception {
+  public void testSportZipperChildEntities() throws Exception {
+    sportsZipper = true;
+    withChildEntities(true, true);
+  }
+
+  @Test
+  public void testCountryZipperChildEntities() throws Exception {
+    countryZipper = true;
+    withChildEntities(true, true);
+  }
+  
+  @Test
+  public void testBothZipperChildEntities() throws Exception {
+    countryZipper = true;
     sportsZipper = true;
     withChildEntities(true, true);
   }
