@@ -49,6 +49,11 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
   protected boolean sportsEntity;
   protected boolean sportsCached;
   protected boolean sportsZipper;
+  
+  protected boolean wrongPeopleOrder ;
+  protected boolean wrongSportsOrder ;
+  protected boolean wrongCountryOrder;
+    
   protected String rootTransformerName;
   protected boolean countryTransformer;
   protected boolean sportsTransformer;    
@@ -71,6 +76,11 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
     sportsEntity = false;
     sportsCached = false;
     sportsZipper = false;
+    
+    wrongPeopleOrder = false;
+    wrongSportsOrder = false;
+    wrongCountryOrder= false;
+    
     rootTransformerName = null;
     countryTransformer = false;
     sportsTransformer = false;
@@ -181,9 +191,14 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
     } else {
       countryEntity = true;
       sportsEntity = true;
-      if (numChildren == 1) {
-        countryEntity = random().nextBoolean();
-        sportsEntity = !countryEntity;
+      if(countryZipper||sportsZipper){// zipper tests fully cover nums of children
+        countryEntity = countryZipper;
+        sportsEntity = sportsZipper;
+      }else{// apply default randomization on cached cases
+        if (numChildren == 1) {
+          countryEntity = random().nextBoolean();
+          sportsEntity = !countryEntity;
+        }
       }
       if (countryEntity) {
         countryTransformer = random().nextBoolean();
@@ -601,7 +616,8 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
         + rootTransformerName + "'' " : "");
   
     sb.append("query=''SELECT ID, NAME, COUNTRY_CODE FROM PEOPLE WHERE DELETED != 'Y' "
-                    +(sportsZipper||countryZipper?"ORDER BY ID":"")+"'' ");
+                    +((sportsZipper||countryZipper?"ORDER BY ID":"")
+                     +(wrongPeopleOrder? " DESC":""))+"'' ");
 
     sb.append(deltaQueriesPersonTable());
     sb.append("> \n");
@@ -629,7 +645,9 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
                 : "where=''ID=People.ID'' ");
             sb.append("join=''zipper'' query=''SELECT PEOPLE.ID, CODE, COUNTRY_NAME FROM COUNTRIES"
                 + " JOIN PEOPLE ON COUNTRIES.CODE=PEOPLE.COUNTRY_CODE "
-                + "WHERE PEOPLE.DELETED != 'Y' ORDER BY PEOPLE.ID'' ");
+                + "WHERE PEOPLE.DELETED != 'Y' ORDER BY PEOPLE.ID "+
+                (wrongCountryOrder ? " DESC":"")
+                + "'' ");
           }else{
             sb.append(random().nextBoolean() ? "cacheKey=''CODE'' cacheLookup=''People.COUNTRY_CODE'' "
                 : "where=''CODE=People.COUNTRY_CODE'' ");
@@ -661,7 +679,9 @@ public abstract class AbstractSqlEntityProcessorTestCase extends
           sb.append(random().nextBoolean() ? "cacheKey=''PERSON_ID'' cacheLookup=''People.ID'' "
               : "where=''PERSON_ID=People.ID'' ");
           if(sportsZipper){
-              sb.append("join=''zipper'' query=''SELECT ID, PERSON_ID, SPORT_NAME FROM PEOPLE_SPORTS ORDER BY PERSON_ID'' ");
+              sb.append("join=''zipper'' query=''SELECT ID, PERSON_ID, SPORT_NAME FROM PEOPLE_SPORTS ORDER BY PERSON_ID"
+                  + (wrongSportsOrder?" DESC" : "")+
+                  "'' ");
             }
           else{
             sb.append("query=''SELECT ID, PERSON_ID, SPORT_NAME FROM PEOPLE_SPORTS ORDER BY ID'' ");

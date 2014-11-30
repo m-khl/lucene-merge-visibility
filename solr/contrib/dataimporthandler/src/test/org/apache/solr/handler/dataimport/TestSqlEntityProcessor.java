@@ -65,6 +65,40 @@ public class TestSqlEntityProcessor extends AbstractSqlEntityProcessorTestCase {
     withChildEntities(true, true);
   }
   
+  @Test(expected=RuntimeException.class /* DIH exceptions are not propagated, here we capturing assertQ exceptions */)
+  public void testSportZipperChildEntitiesWrongOrder() throws Exception {
+    if(random().nextBoolean()){
+      wrongPeopleOrder = true;
+    }else{
+      wrongSportsOrder = true;
+    }
+    testSportZipperChildEntities();
+  }
+
+  @Test(expected=RuntimeException.class )
+  public void testCountryZipperChildEntitiesWrongOrder() throws Exception {
+    if(random().nextBoolean()){
+      wrongPeopleOrder = true;
+    }else{
+      wrongCountryOrder = true;
+    }
+    testCountryZipperChildEntities();
+  }
+  
+  @Test(expected=RuntimeException.class)
+  public void testBothZipperChildEntitiesWrongOrder() throws Exception {
+    if(random().nextBoolean()){
+      wrongPeopleOrder = true;
+    }else{
+      if(random().nextBoolean()){
+        wrongSportsOrder = true;
+      }else{
+        wrongCountryOrder = true;
+      }
+    }
+    testBothZipperChildEntities();
+  }
+  
   @Test
   @Ignore("broken see SOLR-3857")
   public void testSimpleCacheChildEntities() throws Exception {
