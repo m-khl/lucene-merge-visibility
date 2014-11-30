@@ -91,6 +91,14 @@ public class DIHCacheSupport {
         doKeyLookup = true;
       }
     }
+
+    @Override
+    public String toString() {
+      return "Relation "
+          + primaryKey + "="+foreignKey  ;
+    }
+    
+    
   }
   
   private DIHCache instantiateCache(Context context) {

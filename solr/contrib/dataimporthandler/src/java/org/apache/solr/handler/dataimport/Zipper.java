@@ -33,6 +33,8 @@ class Zipper {
   private final DIHCacheSupport.Relation relation;
   
   private Comparable parentId;
+  private Comparable lastChildId;
+  
   private Iterator<Map<String,Object>> rowIterator;
   private PeekingIterator<Map<String,Object>> peeker;
   
@@ -55,6 +57,12 @@ class Zipper {
     while(peeker.hasNext()){
       Map<String,Object> current = peeker.peek();
       Comparable childId = (Comparable) current.get(relation.primaryKey);
+      
+      if(lastChildId!=null && lastChildId.compareTo(childId)>0){
+        throw new IllegalArgumentException("expect increasing foreign keys for "+relation+
+            " got: "+lastChildId+","+childId);
+      }
+      lastChildId = childId;
       int cmp = childId.compareTo(parentId);
       if(cmp==0){
         Map<String,Object> child = peeker.next();
@@ -87,8 +95,13 @@ class Zipper {
   }
 
   public void onNewParent(Context context) {
-    parentId = (Comparable) context.resolve(relation.foreignKey);
-    log.trace("new parent {}={}", relation.foreignKey, parentId);
+    Comparable newParent = (Comparable) context.resolve(relation.foreignKey);
+    if(parentId!=null && parentId.compareTo(newParent)>=0){
+      throw new IllegalArgumentException("expect strictly increasing primary keys for "+relation+
+          " got: "+parentId+","+newParent);
+    }
+    log.trace("{}: {}->{}",relation, newParent, parentId);
+    parentId = newParent;
   }
   
 }
