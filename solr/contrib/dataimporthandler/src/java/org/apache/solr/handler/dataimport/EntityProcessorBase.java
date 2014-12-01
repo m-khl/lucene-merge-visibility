@@ -58,7 +58,7 @@ public class EntityProcessorBase extends EntityProcessor {
     if (isFirstInit) {
       firstInit(context);
     }
-    if(zipper.isActive()){
+    if(zipper!=null){
       zipper.onNewParent(context);
     }else{
       if(cacheSupport!=null) {
@@ -77,9 +77,9 @@ public class EntityProcessorBase extends EntityProcessor {
     String s = context.getEntityAttribute(ON_ERROR);
     if (s != null) onError = s;
     
-    zipper = new Zipper(context);
+    zipper = Zipper.createOrNull(context);
     
-    if(!zipper.isActive()){
+    if(zipper==null){
       initCache(context);
     }
     isFirstInit = false;
@@ -122,7 +122,7 @@ public class EntityProcessorBase extends EntityProcessor {
   }
   
   protected Map<String, Object> getNext() {
-    if(zipper.isActive()){
+    if(zipper!=null){
       return zipper.supplyNextChild(rowIterator);
     }else{
       if(cacheSupport==null) {
